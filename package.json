@@ -15,6 +15,7 @@
     "cors": "^2.8.5",
     "express": "^4.19.1",
     "formidable": "^3.5.1",
+    "http": "^0.0.1-security",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.4.0",
     "mongoose-paginate": "^5.0.3",
