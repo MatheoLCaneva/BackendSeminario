@@ -52,6 +52,7 @@ exports.createUser = async function (user) {
         apellido: user.apellido,
         email: user.email,
         password: hashedPassword,
+        premium: false,
         whitelist: []
         // imgUser: user.imgUser
     });
@@ -62,7 +63,7 @@ exports.createUser = async function (user) {
         var token = jwt.sign({
             id: savedUser._id
         }, process.env.SECRET, {
-            expiresIn: 86400 // expires in 24 hours
+            expiresIn: 3600 // expires in 24 hours
         });
         return token;
     } catch (e) {

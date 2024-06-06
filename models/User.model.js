@@ -8,10 +8,11 @@ var UserSchema = new mongoose.Schema({
     email: {type:String},
     password: {type:String, select: false },
     whitelist: {type:Array},
+    premium: {type:Boolean},
     // imgUser: String
 })
 
 UserSchema.plugin(mongoosePaginate)
 const User = mongoose.model('User', UserSchema, "users")
 
-module.exports = User; 
+module.exports = User;
