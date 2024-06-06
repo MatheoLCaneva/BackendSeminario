@@ -42,9 +42,7 @@ mongoose.Promise = bluebird;
 let url = `${process.env.DATABASE1}${process.env.DATABASE2}=${process.env.DATABASE3}=${process.env.DATABASE4}`
 console.log("BD",url);
 let opts = {
-  useNewUrlParser : true, 
   connectTimeoutMS:20000, 
-  useUnifiedTopology: true
   };
 
 mongoose.connect(url,opts)

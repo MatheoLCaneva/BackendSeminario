@@ -31,22 +31,30 @@ exports.createUser = async function (user) {
     // Creating a new Mongoose Object by using the new keyword
     const existingUser = await User.findOne({ email: user.email });
     if (existingUser) {
-        error = {
+        return {
             description: "Mail used"
-        }
-        return error
+        };
     }
-    var newUser;
-    var hashedPassword = bcrypt.hashSync(user.password, 8);
 
-    newUser = new User({
+    // Verificar que la contraseña tenga al menos una mayúscula, al menos un número y mínimo 6 caracteres
+    const password = user.password;
+    const passwordRegex = /^(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{6,}$/;
+    if (!passwordRegex.test(password)) {
+        return {
+            description: "Password must have at least one uppercase letter, one number, and be at least 6 characters long"
+        };
+    }
+
+    var hashedPassword = bcrypt.hashSync(password, 8);
+
+    var newUser = new User({
         name: user.name,
         apellido: user.apellido,
         email: user.email,
         password: hashedPassword,
         whitelist: []
         // imgUser: user.imgUser
-    })
+    });
 
     try {
         // Saving the User 
@@ -58,106 +66,24 @@ exports.createUser = async function (user) {
         });
         return token;
     } catch (e) {
-        // return a Error message describing the reason 
-        console.log(e)
-        throw Error("Error while Creating User")
+        // return an Error message describing the reason 
+        console.log(e);
+        throw Error("Error while Creating User");
     }
-}
+};
 
 exports.updateUser = async function (user) {
 
-    var _id = { _id: user._id }
-    console.log('pase el controller')
-    console.log(user)
+    let _id = { _id: user._id }
     try {
         //Find the old User Object by the Id
-        var oldUser = await User.findOne(_id);
+        let savedUser = await User.findOneAndUpdate(_id, user, { new: true });
+        return savedUser
     } catch (e) {
         throw Error("Error occured while Finding the User")
     }
-    // If no old User Object exists return false
-    if (!oldUser) {
-        return false;
-    }
-
-
-    if (oldUser.rol == 'Profesor') {
-        var profesor = { profesormail: oldUser.email }
-        try {
-            var classes = await Class.find(profesor)
-            classes.forEach(clase => {
-                clase.profesormail = user.email
-                clase.save()
-            })
-        }
-        catch (e) {
-            throw Error(e)
-        }
-
-        try {
-            console.log(profesor)
-            var contacts = await Contact.find(profesor)
-            contacts.forEach(contact => {
-                contact.profesormail = user.email
-                contact.save()
-            })
-        }
-        catch (err) {
-            console.log(err)
-        }
-
-        try {
-            profesor = { profesor: oldUser.email }
-            var comments = await Comment.find(profesor)
-            comments.forEach(comment => {
-                comment.profesor = user.email
-                comment.save()
-            })
-        }
-        catch (err) {
-            console.log(err)
-        }
-    }
-
-    else {
-        var estudiante = { usuario: oldUser.email }
-        console.log(estudiante)
-        try {
-            var comments = await Comment.find(estudiante)
-            comments.forEach(comment => {
-                comment.usuario = user.email
-                comment.save()
-            })
-        }
-        catch (err) {
-            console.log(err)
-        }
-
-        try {
-            estudiante = { mailContacto: oldUser.email }
-            var contacts = await Contact.find(estudiante)
-            console.log(contacts)
-            contacts.forEach(contact => {
-                contact.mailContacto = user.email
-                contact.telefonoContacto = user.tel
-                contact.save()
-            })
-        }
-        catch (err) {
-            console.log(err)
-        }
-    }
-    //Edit the User Object
-    oldUser.email = user.email
-    oldUser.tel = user.tel
-
-    try {
-        var savedUser = await oldUser.save()
-        return savedUser;
-    } catch (e) {
-        throw Error("And Error occured while updating the User");
-    }
 }
+
 
 exports.updateUserPassword = async function (user) {
 
@@ -218,7 +144,7 @@ exports.loginUser = async function (user) {
         var passwordIsValid = bcrypt.compareSync(user.password, _details.password);
         if (!passwordIsValid) return 0;
 
-        const {password, ...responseUser} = _details._doc
+        const { password, ...responseUser } = _details._doc
         var token = jwt.sign({
             id: _details._id
         }, process.env.SECRET, {
@@ -230,4 +156,59 @@ exports.loginUser = async function (user) {
         throw Error("Error while Login User")
     }
 
+}
+
+exports.addToWhitelist = async function (content) {
+    try {
+        var userId = content._id;
+        var newWhitelist = [];
+
+        var user = await User.findById(userId);
+        if (user && user.whitelist) {
+            newWhitelist = user.whitelist;
+        }
+
+        content.content.forEach(element => {
+            if (!newWhitelist.includes(element)) {
+                newWhitelist.push(element);
+            }
+        });
+
+        var whitelist = await User.findOneAndUpdate(
+            { _id: userId },
+            { whitelist: newWhitelist },
+            { new: true }
+        );
+
+        return { whitelist: whitelist };
+    } catch (e) {
+        // return an Error message describing the reason     
+        throw Error("Error while updating whitelist");
+    }
+}
+
+exports.removeFromWhitelist = async function (content) {
+    try {
+        var userId = content._id;
+
+        var user = await User.findById(userId);
+
+        if (user && user.whitelist.length == 0) {
+            return { error: "Whitelist is empty" };
+        }
+
+        var contentToRemove = new Set(content.content);
+        var newWhitelist = user.whitelist.filter(element => !contentToRemove.has(element));
+
+        var updatedWhitelist = await User.findOneAndUpdate(
+            { _id: userId },
+            { whitelist: newWhitelist },
+            { new: true }
+        );
+
+        return { whitelist: updatedWhitelist.whitelist };
+    } catch (e) {
+        // return an Error message describing the reason     
+        throw Error("Error while updating whitelist");
+    }
 }

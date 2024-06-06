@@ -9,7 +9,7 @@ exports.getUsers = async function (req, res, next) {
     // Check the existence of the query parameters, If doesn't exists assign a default value
     var page = req.query.page ? req.query.page : 1
     console.log(page)
-    var limit = req.query.limit ? req.query.limit : 10;
+    var limit = req.query.limit ? req.query.limit : 1000;
     try {
         var Users = await UserService.getUsers({}, page, limit)
         // Return the Users list with the appropriate HTTP password Code and Message.
@@ -48,7 +48,7 @@ exports.createUser = async function (req, res) {
     try {
         // Calling the Service function with the new object from the Request Body
         var createdUser = await UserService.createUser(User)
-        if (createdUser.description) { return res.status(409).json({ status: 409, message: "Email already exist" }) }
+        if (createdUser.description) { return res.status(409).json({ status: 409, message: createdUser.description }) }
         else {
             return res.status(201).json({ status: 201, createdUser, message: "Succesfully Created User" })
         }
@@ -59,16 +59,12 @@ exports.createUser = async function (req, res) {
     }
 }
 
-
 exports.updateUser = async function (req, res, next) {
 
     // Id is necessary for the update
 
-    var User = {
-        _id: req.body._id,
-        email: req.body.email ? req.body.email : null,
-        tel: req.body.tel ? req.body.tel : null
-    }
+    var User = req.body.user
+    console.log(User)
     try {
         var updatedUser = await UserService.updateUser(User)
         return res.status(200).json({ status: 200, data: updatedUser, message: "Succesfully Updated User" })
@@ -98,13 +94,12 @@ exports.removeUser = async function (req, res, next) {
     var mail = req.body.email;
     try {
         var deleted = await UserService.deleteUser(mail);
-        if (deleted.deletedCount != 0) return res.status(200).json({status:200,message:"Succesfully Deleted... "});
-        else {throw new Error}
+        if (deleted.deletedCount != 0) return res.status(200).json({ status: 200, message: "Succesfully Deleted... " });
+        else { throw new Error }
     } catch (e) {
         return res.status(400).json({ status: 400, message: "User not found" })
     }
 }
-
 
 exports.loginUser = async function (req, res) {
     // Req.Body contains the form submit values.
@@ -176,4 +171,40 @@ exports.getImagenUserByMail = async function (req, res) {
     }
 }
 
+exports.addToWhitelist = async function (req, res) {
 
+    var content = {
+        _id: req.body.userId,
+        content: req.body.content
+    }
+    try {
+        // Calling the Service function with the new object from the Request Body
+        var newWhitelist = await UserService.addToWhitelist(content)
+        return res.status(201).json({ status: 201, newWhitelist, message: "Succesfully Updated Whitelist" })
+
+    } catch (e) {
+        //Return an Error Response Message with Code and the Error Message.
+        console.log(e)
+        return res.status(400).json({ status: 400, message: "User Creation was Unsuccesfull" })
+    }
+}
+
+exports.deleteFromWhitelist = async function (req, res) {
+
+    var content = {
+        _id: req.body.userId,
+        content: req.body.content
+    }
+    try {
+        // Calling the Service function with the new object from the Request Body
+        var newWhitelist = await UserService.deleteFromWhitelist(content)
+        if (newWhitelist.description) {return res.status(400).json({ status: 400, message: newWhitelist.description })}
+        else {return res.status(201).json({ status: 201, newWhitelist, message: "Succesfully Updated Whitelist" })}
+        
+
+    } catch (e) {
+        //Return an Error Response Message with Code and the Error Message.
+        console.log(e)
+        return res.status(400).json({ status: 400, message: "Remove was Unsuccesfull" })
+    }
+}
