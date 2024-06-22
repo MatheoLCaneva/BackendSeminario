@@ -49,7 +49,8 @@ exports.createUser = async function (user) {
 
     var newUser = new User({
         name: user.name,
-        apellido: user.apellido,
+        lastname: user.lastname,
+        username: user.username,
         email: user.email,
         password: hashedPassword,
         premium: false,
@@ -63,7 +64,7 @@ exports.createUser = async function (user) {
         var token = jwt.sign({
             id: savedUser._id
         }, process.env.SECRET, {
-            expiresIn: 3600 // expires in 24 hours
+            expiresIn: 86400
         });
         return token;
     } catch (e) {
@@ -159,34 +160,29 @@ exports.loginUser = async function (user) {
 
 }
 
-exports.addToWhitelist = async function (content) {
+exports.updateWhitelist = async function (content) {
     try {
         var userId = content._id;
-        var newWhitelist = [];
+        console.log(userId)
 
         var user = await User.findById(userId);
-        if (user && user.whitelist) {
-            newWhitelist = user.whitelist;
+        if (!user) {
+            throw Error("User not found");
         }
 
-        content.content.forEach(element => {
-            if (!newWhitelist.includes(element)) {
-                newWhitelist.push(element);
-            }
-        });
+        // Replace the user's whitelist with the new one
+        user.whitelist = content.whitelist;
 
-        var whitelist = await User.findOneAndUpdate(
-            { _id: userId },
-            { whitelist: newWhitelist },
-            { new: true }
-        );
+        // Save the updated user
+        await user.save();
 
-        return { whitelist: whitelist };
+        return { whitelist: user.whitelist };
     } catch (e) {
-        // return an Error message describing the reason     
+        // Return an error message describing the reason     
         throw Error("Error while updating whitelist");
     }
 }
+
 
 exports.removeFromWhitelist = async function (content) {
     try {

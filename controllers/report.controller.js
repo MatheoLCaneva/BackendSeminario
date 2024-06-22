@@ -25,13 +25,14 @@ exports.getReportByUser = async function (req, res) {
 
     // Check the existence of the query parameters, If doesn't exists assign a default value
     var page = req.query.page ? req.query.page : 1
-    var limit = req.query.limit ? req.query.limit : 10;
+    var limit = req.query.limit ? req.query.limit : 1000;
 
     let filtro = req.body
+    console.log(filtro)
     try {
         var Reports = await ReportService.getReports(filtro, page, limit)
         // Return the Users list with the appropriate HTTP password Code and Message.
-        return res.status(200).json({ status: 200, data: Reports, message: "Succesfully Class Recieved" });
+        return res.status(200).json({ status: 200, data: Reports, message: "Succesfully Reports Recieved" });
     } catch (e) {
         //Return an Error Response Message with Code and the Error Message.
         return res.status(400).json({ status: 400, message: e.message });
@@ -44,12 +45,22 @@ exports.createReport = async function (req, res) {
     // console.log(typeof(req.headers.profesor))
     var Report = {
         user: req.body.user,
+        type: req.body.type,
         description: req.body.description,
+        content: req.body.content,
+        pretends: req.body.pretends
     }
     try {
         // Calling the Service function with the new object from the Request Body
         var createdReport = await ReportService.createReport(Report)
-        if (createdReport.description) { return res.status(409).json({ status: 409, message: "Report already exist" }) }
+        console.log("REPORTE", createdReport)
+
+        if (createdReport.descriptionError) {
+            return res.status(409).json({
+                status: 409, message: "Report already exist"
+
+            })
+        }
         else {
             return res.status(201).json({ status: 201, message: "Succesfully Created Report", report: createdReport })
         }
@@ -86,7 +97,7 @@ exports.likeReport = async function (req, res, next) {
         return res.status(400).json({ status: 400., message: "Id must be present" })
     }
 
-    var Report = {_id: req.body.reportId, user: req.body.userId}
+    var Report = { _id: req.body.reportId, user: req.body.userId }
 
     try {
         var updatedReport = await ReportService.likeReport(Report)

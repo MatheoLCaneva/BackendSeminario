@@ -40,7 +40,8 @@ exports.createUser = async function (req, res) {
     console.log("llegue al controller", req.body)
     var User = {
         name: req.body.name,
-        apellido: req.body.apellido,
+        lastname: req.body.lastname,
+        username: req.body.username,
         email: req.body.email,
         password: req.body.password,
         // imgUser: req.body.imgUser,
@@ -113,8 +114,10 @@ exports.loginUser = async function (req, res) {
         var loginUser = await UserService.loginUser(User);
         if (loginUser === 0)
             return res.status(400).json({ status: 400, message: "Error en la contraseña" })
-        else
+        else {
+            res.cookie('token', loginUser.token)
             return res.status(201).json({ loginUser, message: "Succesfully login" })
+        }
     } catch (e) {
         //Return an Error Response Message with Code and the Error Message.
         return res.status(400).json({ status: 400, message: "Invalid username or password" })
@@ -171,21 +174,22 @@ exports.getImagenUserByMail = async function (req, res) {
     }
 }
 
-exports.addToWhitelist = async function (req, res) {
+exports.updateWhitelist = async function (req, res) {
 
     var content = {
-        _id: req.body.userId,
-        content: req.body.content
+        _id: req.body.content.userId,
+        whitelist: req.body.content.content
     }
+
     try {
         // Calling the Service function with the new object from the Request Body
-        var newWhitelist = await UserService.addToWhitelist(content)
+        var newWhitelist = await UserService.updateWhitelist(content)
         return res.status(201).json({ status: 201, newWhitelist, message: "Succesfully Updated Whitelist" })
 
     } catch (e) {
         //Return an Error Response Message with Code and the Error Message.
         console.log(e)
-        return res.status(400).json({ status: 400, message: "User Creation was Unsuccesfull" })
+        return res.status(400).json({ status: 400, message: "Whitelist updating was unsuccesfull" })
     }
 }
 
@@ -198,9 +202,9 @@ exports.deleteFromWhitelist = async function (req, res) {
     try {
         // Calling the Service function with the new object from the Request Body
         var newWhitelist = await UserService.deleteFromWhitelist(content)
-        if (newWhitelist.description) {return res.status(400).json({ status: 400, message: newWhitelist.description })}
-        else {return res.status(201).json({ status: 201, newWhitelist, message: "Succesfully Updated Whitelist" })}
-        
+        if (newWhitelist.description) { return res.status(400).json({ status: 400, message: newWhitelist.description }) }
+        else { return res.status(201).json({ status: 201, newWhitelist, message: "Succesfully Updated Whitelist" }) }
+
 
     } catch (e) {
         //Return an Error Response Message with Code and the Error Message.

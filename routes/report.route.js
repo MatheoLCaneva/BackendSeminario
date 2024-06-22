@@ -10,7 +10,7 @@ router.get('/test', function (req, res) {
     res.send('Llegaste a la ruta de reportes');
 });
 router.post('/create', Authorization,ReportController.createReport)
-router.get('/', Authorization,ReportController.getReports)
+router.get('/',ReportController.getReports)
 router.post('/reportsByUser',Authorization, ReportController.getReportByUser)
 router.put('/update',Authorization, ReportController.updateReport)
 router.put('/like',Authorization, ReportController.likeReport)

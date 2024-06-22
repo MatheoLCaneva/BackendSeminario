@@ -11,12 +11,17 @@ exports.getReports = async function (query, page, limit) {
     // Options setup for the mongoose paginate
     var options = {
         page,
-        limit
+        limit,
+        populate: {
+            path: 'user',
+            select: 'username'
+        }
     }
     // Try Catch the awaited promise to handle the error 
     try {
         console.log("Query", query)
         var Reports = await Report.paginate(query, options)
+        console.log(Reports)
         // Return the Userd list that was retured by the mongoose promise
         return Reports;
 
@@ -29,15 +34,14 @@ exports.getReports = async function (query, page, limit) {
 
 exports.createReport = async function (report) {
 
-    console.log(report.description.content)
-    const existingReport = await Report.findOne({"description.content": report.description.content});
-    console.log(existingReport)
+    const existingReport = await Report.findOne({"content": report.content});
     if (existingReport) {
         error = {
-            description: "The report is already created"
+            descriptionError: "The report is already created"
         }
         return error
     }
+
     function getGMTMinus3Date() {
         const now = new Date();
         const offset = -3 * 60; // GMT-3 en minutos
@@ -47,15 +51,18 @@ exports.createReport = async function (report) {
 
     // Crear un nuevo reporte con la información proporcionada
     var newReport = new Report({
-        user: report.user,              // Asignar el usuario del reporte
+        user: report.user,  
+        type: report.type,            // Asignar el usuario del reporte
         description: report.description, // Asignar la descripción del reporte
+        content: report.content,         // Asignar el contenido del reporte
+        pretends: report.pretends,       // Asignar el pretende del reporte
         date: getGMTMinus3Date(),       // Asignar la fecha ajustada a GMT-3
         likes: 0                        // Inicializar el contador de "me gusta" a 0
     });
 
     try {
-        // var savedReport = await newReport.save();
-        // return savedReport;
+        var savedReport = await newReport.save();
+        return savedReport;
     } catch (e) {
         // return a Error message describing the reason 
         console.log(e)
