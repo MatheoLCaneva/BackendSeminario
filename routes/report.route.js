@@ -12,8 +12,10 @@ router.get('/test', function (req, res) {
 router.post('/create', Authorization,ReportController.createReport)
 router.get('/',ReportController.getReports)
 router.post('/reportsByUser',Authorization, ReportController.getReportByUser)
+router.post('/reportByContent', ReportController.getReportByContent)
 router.put('/update',Authorization, ReportController.updateReport)
 router.put('/like',Authorization, ReportController.likeReport)
+router.put('/dislike',Authorization, ReportController.dislikeReport)
 router.delete('/', Authorization, ReportController.removeReport)
 router.post('/sendMail', MailController.sendEmail)
 

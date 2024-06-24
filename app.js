@@ -21,8 +21,14 @@ app.use(express.urlencoded({
   extended: false
 }));
 
+const corsOptions = {
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'x-access-token']
+};
+
 //aplico cors
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(cookieParser());
 
 //Indico las rutas de los endpoint

@@ -32,6 +32,29 @@ exports.getReports = async function (query, page, limit) {
     }
 }
 
+exports.getReportByContent = async function (query, page, limit) {
+    // Options setup for the mongoose paginate
+    var options = {
+        page,
+        limit,
+        populate: {
+            path: 'user',
+            select: 'username'
+        }
+    }
+    // Try Catch the awaited promise to handle the error 
+    try {
+        var Reports = await Report.paginate(query, options)
+        // Return the Userd list that was retured by the mongoose promise
+        return Reports.docs[0];
+
+    } catch (e) {
+        // return a Error message describing the reason 
+        console.log("error services", e)
+        throw Error('Error while Paginating Reports');
+    }
+}
+
 exports.createReport = async function (report) {
 
     const existingReport = await Report.findOne({"content": report.content});
@@ -57,7 +80,8 @@ exports.createReport = async function (report) {
         content: report.content,         // Asignar el contenido del reporte
         pretends: report.pretends,       // Asignar el pretende del reporte
         date: getGMTMinus3Date(),       // Asignar la fecha ajustada a GMT-3
-        likes: 0                        // Inicializar el contador de "me gusta" a 0
+        likes: 0,                       // Inicializar el contador de "me gusta" a 0
+        dislikes: 0,
     });
 
     try {
@@ -114,6 +138,32 @@ exports.likeReport = async function (report) {
 
     oldReport.likes = oldReport.likes + 1
     oldReport.likesBy.push(report.user)
+
+    try {
+        var savedReport = await oldReport.save()
+        return savedReport;
+    } catch (e) {
+        throw Error("And Error occured while updating the Report");
+    }
+}
+
+exports.dislikeReport = async function (report) {
+
+    var _id = { _id: report._id }
+    console.log(_id)
+    try {
+        //Find the old User Object by the Id    
+        var oldReport = await Report.findOne(_id);
+    } catch (e) {
+        throw Error("Error occured while Finding the Report")
+    }
+    // If no old Report Object exists return false
+    if (!oldReport) {
+        return false;
+    }
+
+    oldReport.dislikes = oldReport.dislikes + 1
+    oldReport.dislikesBy.push(report.user)
 
     try {
         var savedReport = await oldReport.save()

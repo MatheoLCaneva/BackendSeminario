@@ -9,7 +9,9 @@ var ReportSchema = new mongoose.Schema({
     pretends: {type: String},
     date: {type: Date, default: Date.now},
     likes: {type: Number},
-    likesBy: {type: Array}
+    dislikes: {type: Number},
+    likesBy: {type: Array},
+    dislikesBy: {type: Array}
 })
 
 ReportSchema.plugin(mongoosePaginate)

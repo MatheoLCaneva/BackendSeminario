@@ -10,7 +10,7 @@ exports.getReports = async function (req, res, next) {
     // Check the existence of the query parameters, If doesn't exists assign a default value
     var page = req.query.page ? req.query.page : 1
     console.log(page)
-    var limit = req.query.limit ? req.query.limit : 10;
+    var limit = req.query.limit ? req.query.limit : 1000;
     try {
         var Reports = await ReportService.getReports({}, page, limit)
         console.log(Reports)
@@ -32,6 +32,26 @@ exports.getReportByUser = async function (req, res) {
     try {
         var Reports = await ReportService.getReports(filtro, page, limit)
         // Return the Users list with the appropriate HTTP password Code and Message.
+        return res.status(200).json({ status: 200, data: Reports, message: "Succesfully Reports Recieved" });
+    } catch (e) {
+        //Return an Error Response Message with Code and the Error Message.
+        return res.status(400).json({ status: 400, message: e.message });
+    }
+}
+
+exports.getReportByContent = async function (req, res) {
+
+    // Check the existence of the query parameters, If doesn't exists assign a default value
+    var page = req.query.page ? req.query.page : 1
+    var limit = req.query.limit ? req.query.limit : 1;
+
+    let filtro = req.body
+    try {
+        var Reports = await ReportService.getReportByContent(filtro, page, limit)
+        // Return the Users list with the appropriate HTTP password Code and Message.
+        if (Reports == undefined) {
+            return res.status(404).json({ status: 404, message: "Report not found" });
+        }
         return res.status(200).json({ status: 200, data: Reports, message: "Succesfully Reports Recieved" });
     } catch (e) {
         //Return an Error Response Message with Code and the Error Message.
@@ -102,6 +122,22 @@ exports.likeReport = async function (req, res, next) {
     try {
         var updatedReport = await ReportService.likeReport(Report)
         return res.status(200).json({ status: 200, message: "Succesfully Updated Report" })
+    } catch (e) {
+        return res.status(400).json({ status: 400., message: e.message })
+    }
+}
+
+exports.dislikeReport = async function (req, res, next) {
+    // Id is necessary for the update
+    if (!req.body.reportId) {
+        return res.status(400).json({ status: 400., message: "Id must be present" })
+    }
+
+    var Report = { _id: req.body.reportId, user: req.body.userId }
+
+    try {
+        var updatedReport = await ReportService.dislikeReport(Report)
+        return res.status(200).json({ status: 200, message: "Succesfully Dislike Report" })
     } catch (e) {
         return res.status(400).json({ status: 400., message: e.message })
     }

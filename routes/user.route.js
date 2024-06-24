@@ -16,6 +16,7 @@ router.put('/', Authorization, UserController.updateUser)
 router.put('/password', Authorization, UserController.updatePassword)
 router.delete('/', Authorization, UserController.removeUser)
 router.put('/whitelist', Authorization, UserController.updateWhitelist)
+router.put('/whitelist/addOne', Authorization, UserController.addToWhitelist)
 router.delete('/whitelist', Authorization, UserController.deleteFromWhitelist)
 router.post('/sendMail',MailController.sendEmail)
 

@@ -193,6 +193,25 @@ exports.updateWhitelist = async function (req, res) {
     }
 }
 
+exports.addToWhitelist = async function (req, res) {
+
+    var content = {
+        _id: req.body.userId,
+        content: req.body.content
+    }
+
+    try {
+        // Calling the Service function with the new object from the Request Body
+        var newWhitelist = await UserService.addOneToWhitelist(content)
+        return res.status(201).json({ status: 201, newWhitelist, message: "Succesfully Added to Whitelist" })
+
+    } catch (e) {
+        //Return an Error Response Message with Code and the Error Message.
+        console.log(e)
+        return res.status(400).json({ status: 400, message: "Whitelist updating was unsuccesfull" })
+    }
+}
+
 exports.deleteFromWhitelist = async function (req, res) {
 
     var content = {

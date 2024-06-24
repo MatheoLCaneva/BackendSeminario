@@ -183,6 +183,32 @@ exports.updateWhitelist = async function (content) {
     }
 }
 
+exports.addOneToWhitelist = async function (content) {
+    try {
+        var userId = content._id;
+        console.log(userId)
+
+        var user = await User.findById(userId);
+        if (!user) {
+            throw Error("User not found");
+        }
+
+        console.log("CONTENTTT",content)
+        user.whitelist.push(content.content);
+
+        // console.log(user.whitelist)
+
+        // Save the updated user
+        await user.save();
+
+        return { whitelist: user.whitelist };
+    } catch (e) {
+        console.log(e)
+        // Return an error message describing the reason     
+        throw Error("Error while updating whitelist");
+    }
+}
+
 
 exports.removeFromWhitelist = async function (content) {
     try {
