@@ -33,11 +33,18 @@ exports.getUsersByMail = async function (req, res) {
 }
 
 exports.createUser = async function (req, res) {
+    function capitalizeWords(str) {
+        return str
+            .toLowerCase()
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+    }
     var User = {
-        name: req.body.name,
-        lastname: req.body.lastname,
-        username: req.body.username,
-        email: req.body.email,
+        name: capitalizeWords(req.body.name),
+        lastname: capitalizeWords(req.body.lastname),
+        username: capitalizeWords(req.body.username),
+        email: req.body.email.toLowerCase(),
         password: req.body.password,
     }
     try {
