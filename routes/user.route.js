@@ -1,8 +1,6 @@
 var express = require('express')
 var router = express.Router()
 var UserController = require('../controllers/users.controller');
-var UploadController = require('../controllers/upload.controller');
-var MailController = require('../controllers/mail.controller');
 var Authorization = require('../auth/authorization');
 
 router.get('/test', function(req, res) {
@@ -17,7 +15,6 @@ router.put('/', Authorization, UserController.updateUser)
 router.put('/password', UserController.updatePassword)
 router.post('/forgotPassword', UserController.forgotPassword)
 router.delete('/', UserController.removeUser)
-router.post('/sendMail',MailController.sendEmail)
 
 // Export the Router
 module.exports = router;
