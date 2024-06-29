@@ -9,15 +9,14 @@ router.get('/test', function(req, res) {
     res.send('Llegaste a la ruta de users');
   });
 router.post('/registration', UserController.createUser)
+router.get('/activate/:token', UserController.activateUser);
 router.post('/login', UserController.loginUser)
 router.get('/',Authorization, UserController.getUsers)
 router.post('/userByMail', Authorization, UserController.getUsersByMail)
 router.put('/', Authorization, UserController.updateUser)
-router.put('/password', Authorization, UserController.updatePassword)
-router.delete('/', Authorization, UserController.removeUser)
-router.put('/whitelist', Authorization, UserController.updateWhitelist)
-router.put('/whitelist/addOne', Authorization, UserController.addToWhitelist)
-router.delete('/whitelist', Authorization, UserController.deleteFromWhitelist)
+router.put('/password', UserController.updatePassword)
+router.post('/forgotPassword', UserController.forgotPassword)
+router.delete('/', UserController.removeUser)
 router.post('/sendMail',MailController.sendEmail)
 
 // Export the Router

@@ -1,116 +1,375 @@
 var UserService = require('../services/user.service');
 var UserImgService = require('../services/userImg.service');
+var EmailService = require('../services/email.service');
+var User = require('../models/User.model');
+var bcrypt = require('bcryptjs');
+var jwt = require('jsonwebtoken');
+
+
 // Saving the context of this module inside the _the variable
 _this = this;
 
-// Async Controller function to get the To do List
 exports.getUsers = async function (req, res, next) {
-
-    // Check the existence of the query parameters, If doesn't exists assign a default value
     var page = req.query.page ? req.query.page : 1
-    console.log(page)
     var limit = req.query.limit ? req.query.limit : 1000;
     try {
         var Users = await UserService.getUsers({}, page, limit)
-        // Return the Users list with the appropriate HTTP password Code and Message.
         return res.status(200).json({ status: 200, data: Users, message: "Succesfully Users Recieved" });
     } catch (e) {
-        //Return an Error Response Message with Code and the Error Message.
         return res.status(400).json({ status: 400, message: e.message });
     }
 }
-exports.getUsersByMail = async function (req, res) {
 
-    // Check the existence of the query parameters, If doesn't exists assign a default value
+exports.getUsersByMail = async function (req, res) {
     var page = req.query.page ? req.query.page : 1
     var limit = req.query.limit ? req.query.limit : 10;
     let filtro = { email: req.body.email }
     try {
         var Users = await UserService.getUsers(filtro, page, limit)
-        // Return the Users list with the appropriate HTTP password Code and Message.
-        return res.status(200).json({ status: 200, data: Users, message: "Succesfully Users Recieved" });
+        return res.status(200).json({ status: 200, data: Users, message: "Succesfully Users Received" });
     } catch (e) {
-        //Return an Error Response Message with Code and the Error Message.
         return res.status(400).json({ status: 400, message: e.message });
     }
 }
 
 exports.createUser = async function (req, res) {
-
-    console.log("llegue al controller", req.body)
     var User = {
         name: req.body.name,
         lastname: req.body.lastname,
         username: req.body.username,
         email: req.body.email,
         password: req.body.password,
-        // imgUser: req.body.imgUser,
     }
     try {
-        // Calling the Service function with the new object from the Request Body
-        var createdUser = await UserService.createUser(User)
-        if (createdUser.description) { return res.status(409).json({ status: 409, message: createdUser.description }) }
-        else {
-            return res.status(201).json({ status: 201, createdUser, message: "Succesfully Created User" })
+        var token = await UserService.createUser(User)
+        if (token.description) {
+            return res.status(409).json({ status: 409, message: token.description })
+        } else {
+            // Enviar correo de bienvenida con diseño mejorado
+            const mailOptions = {
+                from: 'cyberguard.uade@gmail.com',
+                to: req.body.email,
+                subject: 'Activa tu cuenta',
+                html: `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <style>
+                            .email-container {
+                                font-family: Arial, sans-serif;
+                                line-height: 1.6;
+                                color: #333;
+                                max-width: 600px;
+                                margin: auto;
+                                padding: 20px;
+                                border: 1px solid #ddd;
+                                border-radius: 10px;
+                                background-color: #f9f9f9;
+                            }
+                            .email-header {
+                                text-align: center;
+                                background-color: #4CAF50;
+                                color: white;
+                                padding: 10px 0;
+                                border-top-left-radius: 10px;
+                                border-top-right-radius: 10px;
+                            }
+                            .email-body {
+                                padding: 20px;
+                            }
+                            .email-footer {
+                                text-align: center;
+                                margin-top: 20px;
+                                font-size: 12px;
+                                color: #888;
+                            }
+                            .btn {
+                                display: inline-block;
+                                padding: 10px 20px;
+                                margin: 10px 0;
+                                font-size: 16px;
+                                color: white;
+                                background-color: #4CAF50;
+                                text-decoration: none;
+                                border-radius: 5px;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="email-container">
+                            <div class="email-header">
+                                <h1>¡Bienvenido a CyberGuard!</h1>
+                            </div>
+                            <div class="email-body">
+                                <h2>Hola ${req.body.username},</h2>
+                                <p>Gracias por registrarte en CyberGuard. Estamos encantados de tenerte con nosotros.</p>
+                                <p>A continuación, te proporcionamos algunos detalles importantes sobre tu cuenta:</p>
+                                <ul>
+                                    <li><strong>Nombre:</strong> ${req.body.name} ${req.body.lastname}</li>
+                                    <li><strong>Nombre de usuario:</strong> ${req.body.username}</li>
+                                    <li><strong>Email:</strong> ${req.body.email}</li>
+                                </ul>
+                                <p>Para comenzar a utilizar CyberGuard, haz clic en el siguiente enlace para activar tu cuenta.</p>
+                                <p>Si tienes alguna pregunta o necesitas ayuda, no dudes en contactarnos.</p>
+                                <p><a href="http://localhost:3000/activate/${token}" class="btn">Activar Cuenta</a></p>
+                            </div>
+                            <div class="email-footer">
+                                <p>&copy; 2024 CyberGuard. Todos los derechos reservados.</p>
+                                <p>Si no reconoces este correo, por favor ignóralo.</p>
+                            </div>
+                        </div>
+                    </body>
+                    </html>
+                `
+            };
+            await EmailService.sendEmail(mailOptions);
+            return res.status(201).json({ status: 201, token, message: "Usuario creado y correo enviado con éxito" });
         }
     } catch (e) {
-        //Return an Error Response Message with Code and the Error Message.
-        console.log(e)
-        return res.status(400).json({ status: 400, message: "User Creation was Unsuccesfull" })
+        return res.status(400).json({ status: 400, message: e.message });
     }
 }
 
-exports.updateUser = async function (req, res, next) {
-
-    // Id is necessary for the update
-
-    var User = req.body.user
-    console.log(User)
+exports.activateUser = async (req, res) => {
     try {
-        var updatedUser = await UserService.updateUser(User)
-        return res.status(200).json({ status: 200, data: updatedUser, message: "Succesfully Updated User" })
+        console.log(req.params)
+        const { token } = req.params;
+        const decoded = jwt.verify(token, process.env.SECRET);
+
+        const user = await User.findById(decoded.id);
+        if (!user) {
+            return res.status(400).send('Invalid token');
+        }
+
+        if (user.validated) {
+            return res.status(400).send('Account already activated');
+        }
+
+        user.validated = true;
+        await user.save();
+        res.status(200).json({ status: 200, message: 'Account activated successfully' });
+    } catch (err) {
+        console.error('Error activating user:', err);
+        res.status(500).send('Error activating user');
+    }
+};
+
+
+exports.updateUser = async function (req, res, next) {
+    var User = req.body.user;
+    try {
+        var updatedUser = await UserService.updateUser(User);
+        // Enviar correo de actualización
+        const mailOptions = {
+            from: 'cyberguard.uade@gmail.com',
+            to: req.body.email,
+            subject: 'Actualización de Datos',
+            html: `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        .email-container {
+                            font-family: Arial, sans-serif;
+                            line-height: 1.6;
+                            color: #333;
+                            max-width: 600px;
+                            margin: auto;
+                            padding: 20px;
+                            border: 1px solid #ddd;
+                            border-radius: 10px;
+                            background-color: #f9f9f9;
+                        }
+                        .email-header {
+                            text-align: center;
+                            background-color: #4CAF50;
+                            color: white;
+                            padding: 10px 0;
+                            border-top-left-radius: 10px;
+                            border-top-right-radius: 10px;
+                        }
+                        .email-body {
+                            padding: 20px;
+                        }
+                        .email-footer {
+                            text-align: center;
+                            margin-top: 20px;
+                            font-size: 12px;
+                            color: #888;
+                        }
+                        .btn {
+                            display: inline-block;
+                            padding: 10px 20px;
+                            margin: 10px 0;
+                            font-size: 16px;
+                            color: white;
+                            background-color: #4CAF50;
+                            text-decoration: none;
+                            border-radius: 5px;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="email-container">
+                        <div class="email-header">
+                            <h1>Actualización de Datos</h1>
+                        </div>
+                        <div class="email-body">
+                            <h2>Hola, ${req.body.username},</h2>
+                            <p>Tu información ha sido actualizada con éxito. A continuación, te proporcionamos los detalles actualizados:</p>
+                            <ul>
+                                <li><strong>Nombre:</strong> ${req.body.name} ${req.body.lastname}</li>
+                                <li><strong>Nombre de usuario:</strong> ${req.body.username}</li>
+                                <li><strong>Email:</strong> ${req.body.email}</li>
+                            </ul>
+                            <p>Si tienes alguna pregunta o necesitas ayuda, no dudes en contactarnos.</p>
+                            <p><a href="http://localhost:3000/" class="btn">Visita nuestro sitio web</a></p>
+                        </div>
+                        <div class="email-footer">
+                            <p>&copy; 2024 CyberGuard. Todos los derechos reservados.</p>
+                            <p>Si no reconoces este correo, por favor ignóralo.</p>
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `
+        };
+        await EmailService.sendEmail(mailOptions);
+        return res.status(200).json({ status: 200, data: updatedUser, message: "Usuario actualizado y correo enviado con éxito" });
     } catch (e) {
-        return res.status(400).json({ status: 400., message: e.message })
+        return res.status(400).json({ status: 400, message: e.message });
     }
 }
 
 exports.updatePassword = async function (req, res, next) {
+    const { token, password } = req.body;
 
-    // Id is necessary for the update
 
-    var User = {
-        email: req.body.email,
-        password: req.body.password
-    }
     try {
-        var updatedUser = await UserService.updateUserPassword(User)
-        return res.status(200).json({ status: 200, message: "Succesfully Updated Password" })
-    } catch (e) {
-        return res.status(400).json({ status: 400., message: e.message })
+        console.log(token, password)
+        const decoded = jwt.verify(token, process.env.SECRET);
+        const email = decoded.email;
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).send({ message: 'User not found' });
+        }
+
+        user.password = bcrypt.hashSync(password, 8);
+        await user.save();
+
+        res.status(200).send({ message: 'Password updated successfully' });
+    } catch (error) {
+        res.status(500).send({ message: 'Invalid or expired token' });
+    }
+}
+
+exports.forgotPassword = async function (req, res, next) {
+    const { email } = req.body;
+
+    try {
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).send({ message: 'User not found' });
+        }
+
+        const token = jwt.sign({ email: user.email }, process.env.SECRET, { expiresIn: '1h' });
+
+        // Enviar correo de actualización de contraseña
+        const mailOptions = {
+            from: 'cyberguard.uade@gmail.com',
+            to: req.body.email,
+            subject: 'Actualización de Contraseña',
+            html: `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        .email-container {
+                            font-family: Arial, sans-serif;
+                            line-height: 1.6;
+                            color: #333;
+                            max-width: 600px;
+                            margin: auto;
+                            padding: 20px;
+                            border: 1px solid #ddd;
+                            border-radius: 10px;
+                            background-color: #f9f9f9;
+                        }
+                        .email-header {
+                            text-align: center;
+                            background-color: #4CAF50;
+                            color: white;
+                            padding: 10px 0;
+                            border-top-left-radius: 10px;
+                            border-top-right-radius: 10px;
+                        }
+                        .email-body {
+                            padding: 20px;
+                        }
+                        .email-footer {
+                            text-align: center;
+                            margin-top: 20px;
+                            font-size: 12px;
+                            color: #888;
+                        }
+                        .btn {
+                            display: inline-block;
+                            padding: 10px 20px;
+                            margin: 10px 0;
+                            font-size: 16px;
+                            color: white;
+                            background-color: #4CAF50;
+                            text-decoration: none;
+                            border-radius: 5px;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="email-container">
+                        <div class="email-header">
+                            <h1>Actualización de Contraseña</h1>
+                        </div>
+                        <div class="email-body">
+                            <h2>Hola ${user.username},</h2>
+                            <p>Recibimos una solicitud para cambiar tu contraseña.</p>
+                            <p>Clickea en el botón de abajo para actualizarla.</p>
+                            <p><a href="http://localhost:3000/reestablecerContraseña/${token}" class="btn" style="color: white;">Actualizar Contraseña</a></p>
+                        </div>
+                        <div class="email-footer">
+                            <p>&copy; 2024 CyberGuard. Todos los derechos reservados.</p>
+                            <p>Si no reconoces este correo, por favor ignóralo.</p>
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `
+        };
+        await EmailService.sendEmail(mailOptions);
+
+        res.status(200).send({ message: 'Password reset link sent' });
+    } catch (error) {
+        res.status(500).send({ message: 'Error sending email' });
     }
 }
 
 exports.removeUser = async function (req, res, next) {
-
     var mail = req.body.email;
     try {
         var deleted = await UserService.deleteUser(mail);
         if (deleted.deletedCount != 0) return res.status(200).json({ status: 200, message: "Succesfully Deleted... " });
         else { throw new Error }
     } catch (e) {
-        return res.status(400).json({ status: 400, message: "User not found" })
+        return res.status(400).json({ status: 400, message: "User not found" });
     }
 }
 
 exports.loginUser = async function (req, res) {
-    // Req.Body contains the form submit values.
-    console.log("body", req.body)
     var User = {
         email: req.body.email,
         password: req.body.password
     }
     try {
-        // Calling the Service function with the new object from the Request Body
         var loginUser = await UserService.loginUser(User);
         if (loginUser === 0)
             return res.status(400).json({ status: 400, message: "Error en la contraseña" })
@@ -119,17 +378,13 @@ exports.loginUser = async function (req, res) {
             return res.status(201).json({ loginUser, message: "Succesfully login" })
         }
     } catch (e) {
-        //Return an Error Response Message with Code and the Error Message.
-        return res.status(400).json({ status: 400, message: "Invalid username or password" })
+        return res.status(400).json({ status: 400, message: "Invalid username or password" });
     }
 }
 
 exports.guardarImagenUser = async function (req, res) {
-
-    console.log("ImgUser", req.body)
-    // Id is necessary for the update
     if (!req.body.email) {
-        return res.status(400).json({ status: 400., message: "Mail must be present" })
+        return res.status(400).json({ status: 400, message: "Mail must be present" });
     }
 
     let userImg = {
@@ -145,89 +400,21 @@ exports.guardarImagenUser = async function (req, res) {
         return res.status(201).json({ status: 201, message: "Imagen cargada" });
 
     } catch (e) {
-        console.log("error guardar imagen", e)
-        return res.status(400).json({ status: 400., message: e.message })
-    }
-}
-
-exports.getImagenUserByMail = async function (req, res) {
-
-    // Check the existence of the query parameters, If doesn't exists assign a default value
-    var page = req.query.page ? req.query.page : 1
-    var limit = req.query.limit ? req.query.limit : 10;
-    //obtener filtro
-    var filtro = {
-        mail: req.body.email
-    }
-    try {
-        var UsersImg = await UserImgService.getImagenesByUser(filtro, page, limit)
-        // Return the Users list with the appropriate HTTP password Code and Message.
-        console.log("userByDni", UsersImg)
-        if (UsersImg.total === 0)
-            return res.status(201).json({ status: 201, data: UsersImg, message: "No existe Mail" });
-        else
-            return res.status(200).json({ status: 200, data: UsersImg, message: "Succesfully Users Recieved" });
-    } catch (e) {
-        //Return an Error Response Message with Code and the Error Message.
-        console.log(e)
         return res.status(400).json({ status: 400, message: e.message });
     }
 }
 
 exports.updateWhitelist = async function (req, res) {
-
     var content = {
         _id: req.body.content.userId,
         whitelist: req.body.content.content
     }
 
     try {
-        // Calling the Service function with the new object from the Request Body
         var newWhitelist = await UserService.updateWhitelist(content)
-        return res.status(201).json({ status: 201, newWhitelist, message: "Succesfully Updated Whitelist" })
-
+        return res.status(201).json({ status: 201, newWhitelist, message: "Succesfully Updated Whitelist" });
     } catch (e) {
-        //Return an Error Response Message with Code and the Error Message.
-        console.log(e)
-        return res.status(400).json({ status: 400, message: "Whitelist updating was unsuccesfull" })
+        return res.status(400).json({ status: 400, message: "Whitelist updating was unsuccesfull" });
     }
 }
 
-exports.addToWhitelist = async function (req, res) {
-
-    var content = {
-        _id: req.body.userId,
-        content: req.body.content
-    }
-
-    try {
-        // Calling the Service function with the new object from the Request Body
-        var newWhitelist = await UserService.addOneToWhitelist(content)
-        return res.status(201).json({ status: 201, newWhitelist, message: "Succesfully Added to Whitelist" })
-
-    } catch (e) {
-        //Return an Error Response Message with Code and the Error Message.
-        console.log(e)
-        return res.status(400).json({ status: 400, message: "Whitelist updating was unsuccesfull" })
-    }
-}
-
-exports.deleteFromWhitelist = async function (req, res) {
-
-    var content = {
-        _id: req.body.userId,
-        content: req.body.content
-    }
-    try {
-        // Calling the Service function with the new object from the Request Body
-        var newWhitelist = await UserService.deleteFromWhitelist(content)
-        if (newWhitelist.description) { return res.status(400).json({ status: 400, message: newWhitelist.description }) }
-        else { return res.status(201).json({ status: 201, newWhitelist, message: "Succesfully Updated Whitelist" }) }
-
-
-    } catch (e) {
-        //Return an Error Response Message with Code and the Error Message.
-        console.log(e)
-        return res.status(400).json({ status: 400, message: "Remove was Unsuccesfull" })
-    }
-}

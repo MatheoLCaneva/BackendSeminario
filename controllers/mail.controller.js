@@ -12,8 +12,8 @@ exports.sendEmail = async function (req, res, next) {
         service: 'gmail',
         host: 'smtp.gmail.com',
         auth: {
-            user: '',//poner cuenta gmail
-            pass: ''  //contraseña cuenta  IMPORTANTE HABILITAR acceso apps poco seguras google
+            user: process.env.EMAILSENDER,//poner cuenta gmail
+            pass: process.env.EMAILPASSWORD  //contraseña cuenta  IMPORTANTE HABILITAR acceso apps poco seguras google
         }
     });
     // Definimos el email

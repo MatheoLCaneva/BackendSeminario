@@ -57,7 +57,7 @@ exports.getReportByContent = async function (query, page, limit) {
 
 exports.createReport = async function (report) {
 
-    const existingReport = await Report.findOne({"content": report.content});
+    const existingReport = await Report.findOne({ "content": report.content });
     if (existingReport) {
         error = {
             descriptionError: "The report is already created"
@@ -74,7 +74,7 @@ exports.createReport = async function (report) {
 
     // Crear un nuevo reporte con la información proporcionada
     var newReport = new Report({
-        user: report.user,  
+        user: report.user,
         type: report.type,            // Asignar el usuario del reporte
         description: report.description, // Asignar la descripción del reporte
         content: report.content,         // Asignar el contenido del reporte
@@ -122,56 +122,75 @@ exports.updateReport = async function (Reporto) {
 }
 
 exports.likeReport = async function (report) {
-
     var _id = { _id: report._id }
     console.log(_id)
     try {
-        //Find the old User Object by the Id    
         var oldReport = await Report.findOne(_id);
     } catch (e) {
         throw Error("Error occured while Finding the Report")
     }
-    // If no old Report Object exists return false
+
     if (!oldReport) {
         return false;
     }
 
-    oldReport.likes = oldReport.likes + 1
-    oldReport.likesBy.push(report.user)
+    // Verifica si el usuario ya dio dislike
+    const dislikeIndex = oldReport.dislikesBy.indexOf(report.user);
+    if (dislikeIndex !== -1) {
+        oldReport.dislikes -= 1;
+        oldReport.dislikesBy.splice(dislikeIndex, 1);
+    }
+
+    // Verifica si el usuario ya dio like
+    const likeIndex = oldReport.likesBy.indexOf(report.user);
+    if (likeIndex === -1) {
+        oldReport.likes += 1;
+        oldReport.likesBy.push(report.user);
+    }
 
     try {
-        var savedReport = await oldReport.save()
+        var savedReport = await oldReport.save();
         return savedReport;
     } catch (e) {
-        throw Error("And Error occured while updating the Report");
+        throw Error("An Error occured while updating the Report");
     }
 }
 
 exports.dislikeReport = async function (report) {
-
     var _id = { _id: report._id }
     console.log(_id)
     try {
-        //Find the old User Object by the Id    
         var oldReport = await Report.findOne(_id);
     } catch (e) {
         throw Error("Error occured while Finding the Report")
     }
-    // If no old Report Object exists return false
+
     if (!oldReport) {
         return false;
     }
 
-    oldReport.dislikes = oldReport.dislikes + 1
-    oldReport.dislikesBy.push(report.user)
+    // Verifica si el usuario ya dio like
+    const likeIndex = oldReport.likesBy.indexOf(report.user);
+    if (likeIndex !== -1) {
+        oldReport.likes -= 1;
+        oldReport.likesBy.splice(likeIndex, 1);
+    }
+
+    // Verifica si el usuario ya dio dislike
+    const dislikeIndex = oldReport.dislikesBy.indexOf(report.user);
+    if (dislikeIndex === -1) {
+        oldReport.dislikes += 1;
+        oldReport.dislikesBy.push(report.user);
+    }
 
     try {
-        var savedReport = await oldReport.save()
+        var savedReport = await oldReport.save();
         return savedReport;
     } catch (e) {
-        throw Error("And Error occured while updating the Report");
+        throw Error("An Error occured while updating the Report");
     }
 }
+
 
 exports.finishReport = async function (Reporto) {
 

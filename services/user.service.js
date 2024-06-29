@@ -27,16 +27,25 @@ exports.getUsers = async function (query, page, limit) {
     }
 }
 
+
 exports.createUser = async function (user) {
-    // Creating a new Mongoose Object by using the new keyword
-    const existingUser = await User.findOne({ email: user.email });
-    if (existingUser) {
+    // Check if the email is already in use
+    const existingUserByEmail = await User.findOne({ email: user.email });
+    if (existingUserByEmail) {
         return {
-            description: "Mail used"
+            description: "Email en uso"
         };
     }
 
-    // Verificar que la contraseña tenga al menos una mayúscula, al menos un número y mínimo 6 caracteres
+    // Check if the username is already in use
+    const existingUserByUsername = await User.findOne({ username: user.username });
+    if (existingUserByUsername) {
+        return {
+            description: "Nombre de usuario en uso"
+        };
+    }
+
+    // Verify that the password meets the required criteria
     const password = user.password;
     const passwordRegex = /^(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{6,}$/;
     if (!passwordRegex.test(password)) {
@@ -54,8 +63,7 @@ exports.createUser = async function (user) {
         email: user.email,
         password: hashedPassword,
         premium: false,
-        whitelist: []
-        // imgUser: user.imgUser
+        validated: false
     });
 
     try {
@@ -73,6 +81,7 @@ exports.createUser = async function (user) {
         throw Error("Error while Creating User");
     }
 };
+
 
 exports.updateUser = async function (user) {
 
@@ -138,7 +147,6 @@ exports.loginUser = async function (user) {
     // Creating a new Mongoose Object by using the new keyword
     try {
         // Find the User 
-        console.log("login:", user)
         var _details = await User.findOne({
             email: user.email
         }).select('+password');
@@ -193,7 +201,7 @@ exports.addOneToWhitelist = async function (content) {
             throw Error("User not found");
         }
 
-        console.log("CONTENTTT",content)
+        console.log("CONTENTTT", content)
         user.whitelist.push(content.content);
 
         // console.log(user.whitelist)

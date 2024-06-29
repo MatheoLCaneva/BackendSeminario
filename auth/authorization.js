@@ -8,8 +8,6 @@ var config = require('../config').config();
 var authorization = function (req, res, next) {
 
     var token = req.headers['x-access-token'];
-    console.log(typeof(token))
-    console.log("token",token);
     var msg = {auth: false, message: 'No token provided.'};
     if (!token)
         res.status(500).send(msg);
