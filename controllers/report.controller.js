@@ -145,7 +145,7 @@ exports.createReport = async function (req, res) {
                                     <li><strong>Intenciones:</strong> ${req.body.pretends}</li>
                                 </ul>
                                 <p>Si tienes alguna pregunta o necesitas más información, no dudes en contactarnos.</p>
-                                <p><a href="http://localhost:3000/reportes" class="btn">Visualiza todos los reportes</a></p>
+                                <p><a href="https://cyberguard-uade.onrender.com/reportes" class="btn">Visualiza todos los reportes</a></p>
                             </div>
                             <div class="email-footer">
                                 <p>&copy; 2024 CyberGuard. Todos los derechos reservados.</p>
@@ -254,7 +254,7 @@ exports.likeReport = async function (req, res, next) {
                             <h2>Hola,</h2>
                             <p>El reporte de contenido <strong>${req.body.content}</strong> ha sido aprobado.</p>
                             <p>Si tienes alguna pregunta o necesitas más información, no dudes en contactarnos.</p>
-                            <p><a href="http://localhost:3000/contact" class="btn">Contactar Soporte</a></p>
+                            <p><a href="https://cyberguard-uade.onrender.com/contact" class="btn">Contactar Soporte</a></p>
                         </div>
                         <div class="email-footer">
                             <p>&copy; 2024 CyberGuard. Todos los derechos reservados.</p>
@@ -339,7 +339,7 @@ exports.dislikeReport = async function (req, res, next) {
                             <h2>Hola,</h2>
                             <p>El reporte de contenido <strong>${req.body.content}</strong> ha sido desaprobado.</p>
                             <p>Si tienes alguna pregunta o necesitas más información, no dudes en contactarnos.</p>
-                            <p><a href="http://localhost:3000/contact" class="btn">Contactar Soporte</a></p>
+                            <p><a href="https://cyberguard-uade.onrender.com/contact" class="btn">Contactar Soporte</a></p>
                         </div>
                         <div class="email-footer">
                             <p>&copy; 2024 CyberGuard. Todos los derechos reservados.</p>

@@ -118,7 +118,7 @@ exports.createUser = async function (req, res) {
                                 </ul>
                                 <p>Para comenzar a utilizar CyberGuard, haz clic en el siguiente enlace para activar tu cuenta.</p>
                                 <p>Si tienes alguna pregunta o necesitas ayuda, no dudes en contactarnos.</p>
-                                <p><a href="http://localhost:3000/activate/${token}" class="btn">Activar Cuenta</a></p>
+                                <p><a href="https://cyberguard-uade.onrender.com/activate/${token}" class="btn">Activar Cuenta</a></p>
                             </div>
                             <div class="email-footer">
                                 <p>&copy; 2024 CyberGuard. Todos los derechos reservados.</p>
@@ -230,7 +230,7 @@ exports.updateUser = async function (req, res, next) {
                                 <li><strong>Email:</strong> ${req.body.email}</li>
                             </ul>
                             <p>Si tienes alguna pregunta o necesitas ayuda, no dudes en contactarnos.</p>
-                            <p><a href="http://localhost:3000/" class="btn">Visita nuestro sitio web</a></p>
+                            <p><a href="https://cyberguard-uade.onrender.com/" class="btn">Visita nuestro sitio web</a></p>
                         </div>
                         <div class="email-footer">
                             <p>&copy; 2024 CyberGuard. Todos los derechos reservados.</p>
@@ -341,7 +341,7 @@ exports.forgotPassword = async function (req, res, next) {
                             <h2>Hola ${user.username},</h2>
                             <p>Recibimos una solicitud para cambiar tu contraseña.</p>
                             <p>Clickea en el botón de abajo para actualizarla.</p>
-                            <p><a href="http://localhost:3000/reestablecerContraseña/${token}" class="btn" style="color: white;">Actualizar Contraseña</a></p>
+                            <p><a href="https://cyberguard-uade.onrender.com/reestablecerContraseña/${token}" class="btn" style="color: white;">Actualizar Contraseña</a></p>
                         </div>
                         <div class="email-footer">
                             <p>&copy; 2024 CyberGuard. Todos los derechos reservados.</p>
