@@ -378,16 +378,23 @@ exports.loginUser = async function (req, res) {
     }
     try {
         var loginUser = await UserService.loginUser(User);
-        if (loginUser === 0)
-            return res.status(400).json({ status: 400, message: "Error en la contraseña" })
-        else {
-            res.cookie('token', loginUser.token)
-            return res.status(201).json({ loginUser, message: "Succesfully login" })
+        if (loginUser === 0) {
+            return res.status(400).json({ status: 400, message: "Error en la contraseña" });
+        } else {
+            // Configurar la cookie httpOnly con el token
+            res.cookie('token', loginUser.token, {
+                httpOnly: true, // La cookie no es accesible desde JavaScript
+                secure: true, // La cookie solo se envía a través de HTTPS
+                maxAge: 24 * 60 * 60 * 1000, // La cookie expira en 1 día
+                sameSite: 'Strict' // Protección adicional contra ataques CSRF
+            });
+            return res.status(201).json({ loginUser, message: "Successfully logged in" });
         }
     } catch (e) {
         return res.status(400).json({ status: 400, message: "Invalid username or password" });
     }
 }
+
 
 exports.guardarImagenUser = async function (req, res) {
     if (!req.body.email) {

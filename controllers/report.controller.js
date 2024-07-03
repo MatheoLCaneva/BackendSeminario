@@ -79,7 +79,13 @@ exports.createReport = async function (req, res) {
             return res.status(409).json({
                 status: 409, message: "Report already exist"
             })
-        } else {
+        }
+        else if (createdReport.flaggedError) {
+            return res.status(409).json({
+                status: 409, message: "Report flagged"
+            })
+        }
+        else {
             // Enviar correo de confirmación de reporte
             const mailOptions = {
                 from: 'cyberguard.uade@gmail.com',

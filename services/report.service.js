@@ -1,7 +1,10 @@
 // Gettign the Newly created Mongoose Model we just created 
 var Report = require('../models/report.model')
+const axios = require('axios');
 var bcrypt = require('bcryptjs');
 var jwt = require('jsonwebtoken');
+require('../config').config();
+
 
 // Saving the context of this module inside the _the variable
 _this = this
@@ -56,13 +59,9 @@ exports.getReportByContent = async function (query, page, limit) {
 }
 
 exports.createReport = async function (report) {
-
     const existingReport = await Report.findOne({ "content": report.content });
     if (existingReport) {
-        error = {
-            descriptionError: "The report is already created"
-        }
-        return error
+        return { descriptionError: "The report is already created" };
     }
 
     function getGMTMinus3Date() {
@@ -72,25 +71,47 @@ exports.createReport = async function (report) {
         return gmtMinus3Date;
     }
 
-    // Crear un nuevo reporte con la información proporcionada
-    var newReport = new Report({
-        user: report.user,
-        type: report.type,            // Asignar el usuario del reporte
-        description: report.description, // Asignar la descripción del reporte
-        content: report.content,         // Asignar el contenido del reporte
-        pretends: report.pretends,       // Asignar el pretende del reporte
-        date: getGMTMinus3Date(),       // Asignar la fecha ajustada a GMT-3
-        likes: 0,                       // Inicializar el contador de "me gusta" a 0
-        dislikes: 0,
-    });
+    // Configurar las opciones para la solicitud a la API de moderación de texto
+    const options = {
+        method: 'POST',
+        url: 'https://text-moderator.p.rapidapi.com/api/v1/moderate',
+        headers: {
+            'x-rapidapi-key': process.env.API_KEY_ANALYZER,
+            'x-rapidapi-host': 'text-moderator.p.rapidapi.com',
+            'Content-Type': 'application/json'
+        },
+        data: { input: report.description },
+        httpsAgent: new (require('https').Agent)({ rejectUnauthorized: false })
+    };
 
     try {
+        // Realizar la solicitud a la API de moderación de texto
+        const response = await axios(options);
+
+        // Verificar si alguno de los campos es mayor a 0.7
+        const { toxic, offensive, spam, threat, indecent, erotic } = response.data;
+        if ([toxic, offensive, spam, threat, indecent, erotic].some(value => value > 0.6)) {
+            return { flaggedError: "Flagged" };
+        }
+
+        // Crear un nuevo reporte con la información proporcionada
+        var newReport = new Report({
+            user: report.user,
+            type: report.type,
+            description: report.description,
+            content: report.content,
+            pretends: report.pretends,
+            date: getGMTMinus3Date(),
+            likes: 0,
+            dislikes: 0,
+        });
+
         var savedReport = await newReport.save();
         return savedReport;
-    } catch (e) {
-        // return a Error message describing the reason 
-        console.log(e)
-        throw Error("Error while Creating Report")
+
+    } catch (error) {
+        console.log(error);
+        throw new Error("Error while Creating Report");
     }
 }
 
