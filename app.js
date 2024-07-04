@@ -46,7 +46,6 @@ if (process.env.NODE_ENV === 'Development') {
 var mongoose = require('mongoose')
 mongoose.Promise = bluebird;
 let url = `${process.env.DATABASE1}${process.env.DATABASE2}=${process.env.DATABASE3}=${process.env.DATABASE4}`
-console.log("BD",url);
 let opts = {
   connectTimeoutMS:20000, 
   };

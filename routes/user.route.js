@@ -14,7 +14,6 @@ router.post('/userByMail', Authorization, UserController.getUsersByMail)
 router.put('/', Authorization, UserController.updateUser)
 router.put('/password', UserController.updatePassword)
 router.post('/forgotPassword', UserController.forgotPassword)
-router.delete('/', UserController.removeUser)
 
 // Export the Router
 module.exports = router;
