@@ -10,6 +10,7 @@ var cors = require('cors');
 var indexRouter = require('./routes/index');
 var apiRouter = require('./routes/user.route');
 var reportRouter = require('./routes/report.route')
+var companyRouter = require('./routes/company.route')
 
 //instancio el servidor
 var app = express();
@@ -35,6 +36,7 @@ app.use(cookieParser());
 app.use('/users', apiRouter);
 app.use('/', indexRouter);
 app.use('/reports', reportRouter)
+app.use('/companies', companyRouter)
 
 //onsole.log("processENV",process.env);
 if (process.env.NODE_ENV === 'Development') {

@@ -10,11 +10,9 @@ exports.getReports = async function (req, res, next) {
 
     // Check the existence of the query parameters, If doesn't exists assign a default value
     var page = req.query.page ? req.query.page : 1
-    console.log(page)
     var limit = req.query.limit ? req.query.limit : 1000;
     try {
         var Reports = await ReportService.getReports({}, page, limit)
-        console.log(Reports)
         // Return the Users list with the appropriate HTTP password Code and Message.
         return res.status(200).json({ status: 200, data: Reports, message: "Succesfully Reports Recieved" });
     } catch (e) {
@@ -29,7 +27,6 @@ exports.getReportByUser = async function (req, res) {
     var limit = req.query.limit ? req.query.limit : 1000;
 
     let filtro = req.body
-    console.log(filtro)
     try {
         var Reports = await ReportService.getReports(filtro, page, limit)
         // Return the Users list with the appropriate HTTP password Code and Message.
@@ -60,20 +57,40 @@ exports.getReportByContent = async function (req, res) {
     }
 }
 
+exports.getReportsByCompany = async function (req, res) {
+
+    // Check the existence of the query parameters, If doesn't exists assign a default value
+    var page = req.query.page ? req.query.page : 1
+    var limit = req.query.limit ? req.query.limit : 1000;
+
+    let filtro = req.body
+    try {
+        var Reports = await ReportService.getReports(filtro, page, limit)
+        // Return the Users list with the appropriate HTTP password Code and Message.
+        if (Reports == undefined) {
+            return res.status(404).json({ status: 404, message: "Report not found" });
+        }
+        return res.status(200).json({ status: 200, data: Reports, message: "Succesfully Reports Recieved" });
+    } catch (e) {
+        //Return an Error Response Message with Code and the Error Message.
+        return res.status(400).json({ status: 400, message: e.message });
+    }
+}
+
+
 exports.createReport = async function (req, res) {
-    console.log("llegue al controller", req.body)
 
     var Report = {
         user: req.body.user,
         type: req.body.type,
         description: req.body.description,
         content: req.body.content,
-        pretends: req.body.pretends
+        pretends: req.body.pretends,
+        company: req.body.company
     }
 
     try {
         var createdReport = await ReportService.createReport(Report)
-        console.log("REPORTE", createdReport)
 
         if (createdReport.descriptionError) {
             return res.status(409).json({
@@ -173,7 +190,6 @@ exports.createReport = async function (req, res) {
 
 
 exports.updateReport = async function (req, res, next) {
-    console.log('controller reservas', req.body)
     // Id is necessary for the update
     if (!req.body._id) {
         return res.status(400).json({ status: 400., message: "Id be present" })
@@ -367,7 +383,6 @@ exports.dislikeReport = async function (req, res, next) {
 exports.removeReport = async function (req, res, next) {
 
     var id = req.body.reportId;
-    console.log(id)
     try {
         var deleted = await ReportService.deleteReport(id);
         const mailOptions = {

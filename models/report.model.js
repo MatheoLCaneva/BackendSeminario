@@ -8,6 +8,7 @@ var ReportSchema = new mongoose.Schema({
     content: {type: String},
     pretends: {type: String},
     date: {type: Date, default: Date.now},
+    company: {type: String, required: true, ref: 'Company'},
     likes: {type: Number},
     dislikes: {type: Number},
     likesBy: {type: Array},

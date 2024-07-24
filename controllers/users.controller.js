@@ -32,6 +32,18 @@ exports.getUsersByMail = async function (req, res) {
     }
 }
 
+exports.getUsersByCompany = async function (req, res) {
+    var page = req.query.page ? req.query.page : 1
+    var limit = req.query.limit ? req.query.limit : 10;
+    let filtro = { company: req.body.entidad }
+    try {
+        var Users = await UserService.getUsers(filtro, page, limit)
+        return res.status(200).json({ status: 200, data: Users, message: "Succesfully Users Received" });
+    } catch (e) {
+        return res.status(400).json({ status: 400, message: e.message });
+    }
+}
+
 exports.createUser = async function (req, res) {
     function capitalizeWords(str) {
         return str
@@ -43,9 +55,11 @@ exports.createUser = async function (req, res) {
     var User = {
         name: capitalizeWords(req.body.name),
         lastname: capitalizeWords(req.body.lastname),
-        username: capitalizeWords(req.body.username),
         email: req.body.email.toLowerCase(),
+        phone: req.body.phone,
         password: req.body.password,
+        company: req.body.company,
+        rol: req.body.rol
     }
     try {
         var token = await UserService.createUser(User)
@@ -139,7 +153,6 @@ exports.createUser = async function (req, res) {
 
 exports.activateUser = async (req, res) => {
     try {
-        console.log(req.params)
         const { token } = req.params;
         const decoded = jwt.verify(token, process.env.SECRET);
 
@@ -162,86 +175,10 @@ exports.activateUser = async (req, res) => {
 };
 
 
-exports.updateUser = async function (req, res, next) {
-    var User = req.body.user;
+exports.updateRol = async function (req, res, next) {
+    var User = {_id: req.body.id, rol: req.body.rol}
     try {
         var updatedUser = await UserService.updateUser(User);
-        // Enviar correo de actualización
-        const mailOptions = {
-            from: 'cyberguard.uade@gmail.com',
-            to: req.body.email,
-            subject: 'Actualización de Datos',
-            html: `
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <style>
-                        .email-container {
-                            font-family: Arial, sans-serif;
-                            line-height: 1.6;
-                            color: #333;
-                            max-width: 600px;
-                            margin: auto;
-                            padding: 20px;
-                            border: 1px solid #ddd;
-                            border-radius: 10px;
-                            background-color: #f9f9f9;
-                        }
-                        .email-header {
-                            text-align: center;
-                            background-color: #4CAF50;
-                            color: white;
-                            padding: 10px 0;
-                            border-top-left-radius: 10px;
-                            border-top-right-radius: 10px;
-                        }
-                        .email-body {
-                            padding: 20px;
-                        }
-                        .email-footer {
-                            text-align: center;
-                            margin-top: 20px;
-                            font-size: 12px;
-                            color: #888;
-                        }
-                        .btn {
-                            display: inline-block;
-                            padding: 10px 20px;
-                            margin: 10px 0;
-                            font-size: 16px;
-                            color: white;
-                            background-color: #4CAF50;
-                            text-decoration: none;
-                            border-radius: 5px;
-                        }
-                    </style>
-                </head>
-                <body>
-                    <div class="email-container">
-                        <div class="email-header">
-                            <h1>Actualización de Datos</h1>
-                        </div>
-                        <div class="email-body">
-                            <h2>Hola, ${req.body.username},</h2>
-                            <p>Tu información ha sido actualizada con éxito. A continuación, te proporcionamos los detalles actualizados:</p>
-                            <ul>
-                                <li><strong>Nombre:</strong> ${req.body.name} ${req.body.lastname}</li>
-                                <li><strong>Nombre de usuario:</strong> ${req.body.username}</li>
-                                <li><strong>Email:</strong> ${req.body.email}</li>
-                            </ul>
-                            <p>Si tienes alguna pregunta o necesitas ayuda, no dudes en contactarnos.</p>
-                            <p><a href="https://cyberguard-uade.onrender.com/" class="btn">Visita nuestro sitio web</a></p>
-                        </div>
-                        <div class="email-footer">
-                            <p>&copy; 2024 CyberGuard. Todos los derechos reservados.</p>
-                            <p>Si no reconoces este correo, por favor ignóralo.</p>
-                        </div>
-                    </div>
-                </body>
-                </html>
-            `
-        };
-        await EmailService.sendEmail(mailOptions);
         return res.status(200).json({ status: 200, data: updatedUser, message: "Usuario actualizado y correo enviado con éxito" });
     } catch (e) {
         return res.status(400).json({ status: 400, message: e.message });
@@ -253,7 +190,6 @@ exports.updatePassword = async function (req, res, next) {
 
 
     try {
-        console.log(token, password)
         const decoded = jwt.verify(token, process.env.SECRET);
         const email = decoded.email;
 
@@ -392,43 +328,6 @@ exports.loginUser = async function (req, res) {
         }
     } catch (e) {
         return res.status(400).json({ status: 400, message: "Invalid username or password" });
-    }
-}
-
-
-exports.guardarImagenUser = async function (req, res) {
-    if (!req.body.email) {
-        return res.status(400).json({ status: 400, message: "Mail must be present" });
-    }
-
-    let userImg = {
-        email: req.body.email,
-        nombreImagen: req.body.nombreImagen
-    }
-
-    try {
-        if (userImg.nombreImagen !== '') {
-            var newUserImg = await UserImgService.createUserImg(userImg);
-        }
-
-        return res.status(201).json({ status: 201, message: "Imagen cargada" });
-
-    } catch (e) {
-        return res.status(400).json({ status: 400, message: e.message });
-    }
-}
-
-exports.updateWhitelist = async function (req, res) {
-    var content = {
-        _id: req.body.content.userId,
-        whitelist: req.body.content.content
-    }
-
-    try {
-        var newWhitelist = await UserService.updateWhitelist(content)
-        return res.status(201).json({ status: 201, newWhitelist, message: "Succesfully Updated Whitelist" });
-    } catch (e) {
-        return res.status(400).json({ status: 400, message: "Whitelist updating was unsuccesfull" });
     }
 }
 

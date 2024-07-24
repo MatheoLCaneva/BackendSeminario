@@ -15,16 +15,19 @@ exports.getReports = async function (query, page, limit) {
     var options = {
         page,
         limit,
-        populate: {
+        populate: [{
             path: 'user',
-            select: 'username'
+            select: 'name lastname email'
+        },
+        {
+            path: 'company',
+            select: ''
         }
+        ]
     }
     // Try Catch the awaited promise to handle the error 
     try {
-        console.log("Query", query)
         var Reports = await Report.paginate(query, options)
-        console.log(Reports)
         // Return the Userd list that was retured by the mongoose promise
         return Reports;
 
@@ -100,6 +103,7 @@ exports.createReport = async function (report) {
             type: report.type,
             description: report.description,
             content: report.content,
+            company: report.company,
             pretends: report.pretends,
             date: getGMTMinus3Date(),
             likes: 0,
@@ -117,7 +121,6 @@ exports.createReport = async function (report) {
 
 exports.updateReport = async function (Reporto) {
 
-    console.log(Reporto._id)
     var _id = { _id: Reporto._id }
 
     try {
@@ -144,7 +147,6 @@ exports.updateReport = async function (Reporto) {
 
 exports.likeReport = async function (report) {
     var _id = { _id: report._id }
-    console.log(_id)
     try {
         var oldReport = await Report.findOne(_id);
     } catch (e) {
@@ -179,7 +181,6 @@ exports.likeReport = async function (report) {
 
 exports.dislikeReport = async function (report) {
     var _id = { _id: report._id }
-    console.log(_id)
     try {
         var oldReport = await Report.findOne(_id);
     } catch (e) {
@@ -245,7 +246,6 @@ exports.deleteReport = async function (id) {
         var deleted = await Report.deleteOne({
             _id: id
         })
-        console.log("Report", deleted)
         if (deleted.n === 0 && deleted.ok === 1) {
             throw Error("Report Could not be deleted")
         }

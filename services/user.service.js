@@ -11,11 +11,10 @@ exports.getUsers = async function (query, page, limit) {
     // Options setup for the mongoose paginate
     var options = {
         page,
-        limit
+        limit,
     }
     // Try Catch the awaited promise to handle the error 
     try {
-        console.log("Query", query)
         var Users = await User.paginate(query, options)
         // Return the Userd list that was retured by the mongoose promise
         return Users;
@@ -37,17 +36,9 @@ exports.createUser = async function (user) {
         };
     }
 
-    // Check if the username is already in use
-    const existingUserByUsername = await User.findOne({ username: user.username });
-    if (existingUserByUsername) {
-        return {
-            description: "Nombre de usuario en uso"
-        };
-    }
-
     // Verify that the password meets the required criteria
     const password = user.password;
-    const passwordRegex = /^(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{6,}$/;
+    const passwordRegex = /^(?=.*[A-Z])(?=.*\d)[A-Za-z\d.*_\-^]{6,}$/;
     if (!passwordRegex.test(password)) {
         return {
             description: "Password must have at least one uppercase letter, one number, and be at least 6 characters long"
@@ -59,11 +50,14 @@ exports.createUser = async function (user) {
     var newUser = new User({
         name: user.name,
         lastname: user.lastname,
-        username: user.username,
         email: user.email,
+        company: user.company,
+        phone: user.phone,
+        rol: user.rol,
         password: hashedPassword,
-        premium: false,
-        validated: false
+        validated: false,
+        createdAt: Date.now(),
+        updatedAt: Date.now()
     });
 
     try {
@@ -99,7 +93,6 @@ exports.updateUser = async function (user) {
 exports.updateUserPassword = async function (user) {
 
     var email = { email: user.email }
-    console.log('pase el controller')
     try {
         //Find the old User Object by the Id
         var oldUser = await User.findOne(email);
@@ -126,12 +119,10 @@ exports.updateUserPassword = async function (user) {
 exports.deleteUser = async function (mail) {
 
     // Delete the User
-    console.log("mail mandado", mail)
     try {
         var deleted = await User.deleteOne({
             email: mail
         })
-        console.log("Usuario", deleted)
         if (deleted.n === 0 && deleted.ok === 1) {
             throw Error("User Could not be deleted")
         }
@@ -149,7 +140,7 @@ exports.loginUser = async function (user) {
         // Find the User 
         var _details = await User.findOne({
             email: user.email
-        }).select('+password');
+        }).select('+password').populate('company');
 
         var passwordIsValid = bcrypt.compareSync(user.password, _details.password);
         if (!passwordIsValid) return 0;
@@ -171,7 +162,6 @@ exports.loginUser = async function (user) {
 exports.updateWhitelist = async function (content) {
     try {
         var userId = content._id;
-        console.log(userId)
 
         var user = await User.findById(userId);
         if (!user) {
@@ -194,17 +184,13 @@ exports.updateWhitelist = async function (content) {
 exports.addOneToWhitelist = async function (content) {
     try {
         var userId = content._id;
-        console.log(userId)
 
         var user = await User.findById(userId);
         if (!user) {
             throw Error("User not found");
         }
 
-        console.log("CONTENTTT", content)
         user.whitelist.push(content.content);
-
-        // console.log(user.whitelist)
 
         // Save the updated user
         await user.save();

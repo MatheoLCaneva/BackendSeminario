@@ -18,7 +18,6 @@ var authorization = function (req, res, next) {
         var msg = {auth: false, message: 'Failed to authenticate token.'};
         if (err)
         res.status(500).send(msg);
-        console.log('REQID', req.userId)
         req.userId = decoded.id;
         next();
     });

@@ -11,7 +11,8 @@ router.get('/activate/:token', UserController.activateUser);
 router.post('/login', UserController.loginUser)
 router.get('/',Authorization, UserController.getUsers)
 router.post('/userByMail', Authorization, UserController.getUsersByMail)
-router.put('/', Authorization, UserController.updateUser)
+router.post('/usersByCompany', UserController.getUsersByCompany)
+router.put('/rol', UserController.updateRol)
 router.put('/password', UserController.updatePassword)
 router.post('/forgotPassword', UserController.forgotPassword)
 

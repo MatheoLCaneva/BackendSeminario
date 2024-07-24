@@ -5,13 +5,14 @@ var mongoosePaginate = require('mongoose-paginate-v2')
 var UserSchema = new mongoose.Schema({
     name: { type: String, required: true },
     lastname: { type: String, required: true },
-    username: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
-    password: { type: String, required: true, select: false },
-    whitelist: { type: Array },
-    premium: { type: Boolean },
-    validated: { type: Boolean },
-    // imgUser: String
+    phone : { type: String, required: true, unique: true },
+    company: { type: String, required: true, ref: 'Company' },
+    password: { type: String, select: false },
+    rol: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now },
+    validated: { type: Boolean, default: true },
 })
 
 UserSchema.plugin(mongoosePaginate)
